@@ -13,6 +13,7 @@ export default function CheckInPage() {
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
+    email: '',
     dateOfBirth: '',
     address: '',
     city: '',
@@ -113,14 +114,48 @@ export default function CheckInPage() {
   };
 
   const handleSubmit = async () => {
-    console.log('Form Data:', formData);
-    console.log('Insurance Card Front:', insuranceCardFront);
-    console.log('Insurance Card Back:', insuranceCardBack);
-    console.log('ID Front:', idFront);
-    console.log('ID Back:', idBack);
-    console.log('Additional Documents:', additionalDocs);
-    
-    setSubmitted(true);
+    try {
+      // Create FormData to send files
+      const formDataToSend = new FormData();
+      
+      // Add text fields
+      formDataToSend.append('firstName', formData.firstName);
+      formDataToSend.append('lastName', formData.lastName);
+      formDataToSend.append('email', formData.email);
+      formDataToSend.append('phone', formData.phone);
+      formDataToSend.append('dateOfBirth', formData.dateOfBirth);
+      formDataToSend.append('address', formData.address);
+      formDataToSend.append('city', formData.city);
+      formDataToSend.append('state', formData.state);
+      formDataToSend.append('zipCode', formData.zipCode);
+      formDataToSend.append('insuranceCardId', formData.insuranceCardId);
+      
+      // Add files
+      if (insuranceCardFront) formDataToSend.append('insuranceFront', insuranceCardFront.file);
+      if (insuranceCardBack) formDataToSend.append('insuranceBack', insuranceCardBack.file);
+      if (idFront) formDataToSend.append('idFront', idFront.file);
+      if (idBack) formDataToSend.append('idBack', idBack.file);
+      
+      // Add additional docs
+      additionalDocs.forEach((doc, index) => {
+        formDataToSend.append(`additionalDoc${index}`, doc.file);
+      });
+
+      // Send to API
+      const response = await fetch('/api/checkin', {
+        method: 'POST',
+        body: formDataToSend,
+      });
+
+      if (response.ok) {
+        setSubmitted(true);
+      } else {
+        alert('Failed to complete check-in. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error submitting check-in:', error);
+      alert('Error submitting check-in. Please try again.');
+    }
   };
 
   const resetForm = () => {
@@ -128,6 +163,7 @@ export default function CheckInPage() {
     setFormData({
       firstName: '',
       lastName: '',
+      email: '',
       dateOfBirth: '',
       address: '',
       city: '',
@@ -381,6 +417,18 @@ export default function CheckInPage() {
                     value={formData.dateOfBirth}
                     onChange={handleInputChange}
                     style={{ width: '100%', padding: '0.75rem 1rem', fontSize: '1.125rem', border: '2px solid #d1d5db', borderRadius: '0.75rem', outline: 'none' }}
+                  />
+                </div>
+                
+                <div>
+                  <label style={{ display: 'block', fontSize: '1.125rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>Email Address</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    style={{ width: '100%', padding: '0.75rem 1rem', fontSize: '1.125rem', border: '2px solid #d1d5db', borderRadius: '0.75rem', outline: 'none' }}
+                    placeholder="john.doe@example.com"
                   />
                 </div>
                 
