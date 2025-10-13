@@ -34,6 +34,9 @@ export default function Navbar() {
             <li className="nav-item">
               <Link href="#appointment" className="nav-link">Appointment</Link>
             </li>
+            <li className="nav-item">
+              <Link href="/check-in" className="nav-link">Check In</Link>
+            </li>
             <li className="nav-item ms-lg-3">
               <Link href="#appointment" className="btn btn-gradient rounded-pill px-4">
                 Book Now
