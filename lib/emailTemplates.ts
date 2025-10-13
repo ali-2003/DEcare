@@ -169,7 +169,7 @@ export function getAppointmentEmailTemplate(patientData: PatientData): string {
     
     <div class="footer">
       <p><strong>Diabetes & Endocrinology Care Clinic</strong></p>
-      <p>📞 (630) 234-4466 | 📍 Oak Brook, IL • Munster, IN • Winfield, IL</p>
+      <p>📞 (630) 866-6334 | 📍 4121 Fairview Ave # L2, Downers Grove, IL 60515</p>
       <p style="margin: 10px 0 0 0; font-size: 12px;">© ${new Date().getFullYear()} All rights reserved</p>
     </div>
   </div>
@@ -366,7 +366,7 @@ export function getCheckInEmailTemplate(checkInData: CheckInData): string {
     
     <div class="footer">
       <p><strong>Diabetes & Endocrinology Care Clinic</strong></p>
-      <p>📞 (630) 234-4466 | 📍 Oak Brook, IL • Munster, IN • Winfield, IL</p>
+      <p>📞 (630) 866-6334 | 📍 4121 Fairview Ave # L2, Downers Grove, IL 60515</p>
       <p style="margin: 10px 0 0 0; font-size: 12px;">© ${new Date().getFullYear()} All rights reserved</p>
     </div>
   </div>

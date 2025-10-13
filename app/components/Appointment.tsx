@@ -73,9 +73,9 @@ export default function Appointment() {
         <p className="text-center text-muted mb-2 fs-5">Fill in your information to proceed with scheduling</p>
         <p className="text-center mb-5">
           <i className="bi bi-telephone-fill text-primary me-2"></i>
-          <strong>(630) 234-4466</strong>
+          <strong>(630) 866-6334</strong>
           <span className="mx-3">|</span>
-          <i className="bi bi-geo-alt-fill text-primary me-2"></i>Oak Brook, IL
+          <i className="bi bi-geo-alt-fill text-primary me-2"></i>4121 Fairview Ave # L2, Downers Grove, IL 60515
         </p>
         
         {/* Office Hours */}
@@ -86,27 +86,33 @@ export default function Appointment() {
                 <h4 className="fw-bold mb-4 gradient-text text-center">
                   <i className="bi bi-clock me-2"></i>Office Hours
                 </h4>
-                <div className="row text-center g-3">
+                <div className="row text-center g-3 justify-content-center">
                   <div className="col-6 col-md-4">
                     <div className="p-3 bg-light rounded">
                       <strong>Monday</strong>
-                      <p className="mb-0 text-muted small">1:00 PM - 5:00 PM</p>
+                      <p className="mb-0 text-muted small">8:30 AM - 5:00 PM</p>
                     </div>
                   </div>
                   <div className="col-6 col-md-4">
                     <div className="p-3 bg-light rounded">
-                      <strong>Tuesday</strong>
-                      <p className="mb-0 text-muted small">1:00 PM - 5:00 PM</p>
+                      <strong>Thursday</strong>
+                      <p className="mb-0 text-muted small">8:30 AM - 5:00 PM</p>
                     </div>
                   </div>
                   <div className="col-6 col-md-4">
                     <div className="p-3 bg-light rounded">
                       <strong>Friday</strong>
-                      <p className="mb-0 text-muted small">1:00 PM - 5:00 PM</p>
+                      <p className="mb-0 text-muted small">8:30 AM - 5:00 PM</p>
+                    </div>
+                  </div>
+                  <div className="col-6 col-md-4">
+                    <div className="p-3 bg-light rounded">
+                      <strong>Saturday</strong>
+                      <p className="mb-0 text-muted small">9:00 PM - 12:00 PM</p>
                     </div>
                   </div>
                   <div className="col-12">
-                    <p className="text-muted mb-0"><em>Wednesday, Thursday, Saturday, Sunday: Closed</em></p>
+                    <p className="text-muted mb-0"><em>Tuesday, Wednesday and Sunday: Closed</em></p>
                   </div>
                 </div>
               </div>
@@ -214,7 +220,7 @@ export default function Appointment() {
                   <button
                     type="button"
                     onClick={handleScheduleClick}
-                    // disabled={!showSuccess}
+                    disabled={!showSuccess}
                     className="btn btn-light btn-lg rounded-pill px-5 py-3 fs-5 fw-bold"
                     style={{ opacity: showSuccess ? 1 : 0.5, cursor: showSuccess ? 'pointer' : 'not-allowed' }}
                   >

@@ -42,26 +42,34 @@ export default function Hero() {
           </div>
           
           <div className="col-lg-6">
-            <div className="position-relative floating">
-              {/* Doctor Image Container with 3D effect */}
-              <div className="doctor-image-container card-3d shadow-lg position-relative items-center">
-                <Image
-                  src="/images/sanameah.jpg"  // Change this to your image filename
-                  alt="Dr. Sana Meah"
-                  width={500}
-                  height={500}
-                  className="doctor-image align-items-center"
-                  priority
-                />
-                
-                {/* Experience Badge */}
-                <div className="experience-badge text-center">
-                  <h2 className="display-4 fw-bold mb-0">9+</h2>
-                  <p className="mb-0 fw-semibold">Years Experience</p>
-                </div>
-              </div>
-            </div>
-          </div>
+  <div className="position-relative floating">
+    {/* Doctor Image Container with 3D effect */}
+    <div className="doctor-image-container card-3d shadow-lg position-relative">
+      <Image
+        src="/images/sanameah.jpg"
+        alt="Dr. Sana Meah"
+        width={500}
+        height={500}
+        className="doctor-image"
+        style={{ 
+          width: '100%', 
+          height: '100%', 
+          objectFit: 'cover',
+          objectPosition: 'center'
+        }}
+        priority
+      />
+      
+      {/* Experience Badge */}
+      <div className="position-absolute bottom-0 end-0 m-4">
+        <div className="bg-white rounded-4 p-4 shadow-lg text-center">
+          <h2 className="display-4 fw-bold gradient-text mb-0">9+</h2>
+          <p className="text-primary fw-semibold mb-0">Years Experience</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
         </div>
       </div>
     </section>

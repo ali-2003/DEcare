@@ -12,10 +12,10 @@ export default function Footer() {
           <div className="col-lg-4">
             <h5 className="fw-bold mb-3">Contact Info</h5>
             <p className="text-white-50 mb-2">
-              <i className="bi bi-geo-alt me-2"></i>Oak Brook, IL
+              <i className="bi bi-geo-alt me-2"></i>4121 Fairview Ave # L2, Downers Grove, IL 60515
             </p>
             <p className="text-white-50 mb-2">
-              <i className="bi bi-telephone me-2"></i>(630) 234-4466
+              <i className="bi bi-telephone me-2"></i>(630) 866-6334
             </p>
             <p className="text-white-50 mb-2">
               <i className="bi bi-camera-video me-2"></i>Telehealth Available
@@ -23,10 +23,11 @@ export default function Footer() {
           </div>
           <div className="col-lg-4">
             <h5 className="fw-bold mb-3">Office Hours</h5>
-            <p className="text-white-50 mb-2">Monday: 1:00 PM - 5:00 PM</p>
-            <p className="text-white-50 mb-2">Tuesday: 1:00 PM - 5:00 PM</p>
-            <p className="text-white-50 mb-2">Friday: 1:00 PM - 5:00 PM</p>
-            <p className="text-white-50">Wed, Thu, Sat, Sun: Closed</p>
+            <p className="text-white-50 mb-2">Monday: 8:30 AM - 5:00 PM</p>
+            <p className="text-white-50 mb-2">Thursday: 8:30 AM - 5:00 PM</p>
+            <p className="text-white-50 mb-2">Friday: 8:30 AM - 5:00 PM</p>
+            <p className="text-white-50 mb-2">Saturday: 9:00 AM - 12:00 PM</p>
+            <p className="text-white-50">Tue, Wed, Sun: Closed</p>
           </div>
         </div>
         <hr className="border-secondary my-4" />
