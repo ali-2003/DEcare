@@ -20,6 +20,9 @@ export default function Footer() {
             <p className="text-white-50 mb-2">
               <i className="bi bi-camera-video me-2"></i>Telehealth Available
             </p>
+            <p className="text-white-50 mb-2">
+              <i className="bi bi-envelope me-2"></i>smeah@diabetesendocare.org
+            </p>
           </div>
           <div className="col-lg-4">
             <h5 className="fw-bold mb-3">Office Hours</h5>

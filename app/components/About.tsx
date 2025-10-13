@@ -38,7 +38,7 @@ export default function About() {
                 <div className="row g-2">
                   <div className="col-md-6">
                     <ul className="list-unstyled mb-0">
-                      {['Diabetes', 'Gestational Diabetes', 'Thyroid Disorders', 'Parathyroid Disorders'].map((item, idx) => (
+                      {['Diabetes', 'Obesity/Weight Management', 'Gestational Diabetes', 'Thyroid Disorders'].map((item, idx) => (
                         <li key={idx} className="mb-2 d-flex align-items-center">
                           <span className="badge bg-primary rounded-circle me-2" style={{ width: '8px', height: '8px' }}></span>
                           <span className="small">{item}</span>
@@ -48,7 +48,7 @@ export default function About() {
                   </div>
                   <div className="col-md-6">
                     <ul className="list-unstyled mb-0">
-                      {['Pituitary Disorders', 'Adrenal Disorders', 'Osteoporosis', 'Weight Management'].map((item, idx) => (
+                      {['Parathyroid Disorders', 'Pituitary Disorders', 'Adrenal Disorders', 'Osteoporosis'].map((item, idx) => (
                         <li key={idx} className="mb-2 d-flex align-items-center">
                           <span className="badge bg-primary rounded-circle me-2" style={{ width: '8px', height: '8px' }}></span>
                           <span className="small">{item}</span>
@@ -73,11 +73,11 @@ export default function About() {
                 <ul className="list-unstyled mb-0">
                   <li className="mb-3">
                     <i className="bi bi-check-circle-fill me-2"></i>
-                    Chicago College of Osteopathic Medicine at Midwestern University (2006)
+                    Chicago College of Osteopathic Medicine at Midwestern University 
                   </li>
                   <li className="mb-3">
                     <i className="bi bi-check-circle-fill me-2"></i>
-                    Fellowship: University of Arizona College of Medicine - Endocrinology (2014-2016)
+                    Fellowship: University of Arizona College of Medicine - Endocrinology
                   </li>
                 </ul>
               </div>
