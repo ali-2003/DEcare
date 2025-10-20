@@ -226,7 +226,7 @@ export default function CheckInPage() {
     setSubmitted(false);
   };
 
-  const allRequiredDocsScanned = insuranceCardFront && insuranceCardBack && idFront && idBack;
+  const allRequiredDocsScanned =  idFront && idBack;
 
   if (patientType === null) {
     return (
