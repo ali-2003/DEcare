@@ -10,9 +10,7 @@ interface PhotoData {
 
 export default function CheckInPage() {
   const [patientType, setPatientType] = useState<'new' | 'returning' | null>(null);
-  const [step, setStep] = useState(1); // For new patients: 1=info, 2=documents
-  const [newPatientEmail, setNewPatientEmail] = useState('');
-  const [newPatientLoading, setNewPatientLoading] = useState(false);
+  const [step, setStep] = useState(1);
   
   const [formData, setFormData] = useState({
     firstName: '',
@@ -39,33 +37,6 @@ export default function CheckInPage() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const sendNewPatientIntakeEmail = async () => {
-    if (!newPatientEmail) {
-      alert('Please enter your email address');
-      return;
-    }
-
-    setNewPatientLoading(true);
-    try {
-      const response = await fetch('/api/send-new-patient-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: newPatientEmail })
-      });
-
-      if (response.ok) {
-        alert('Intake form link sent to your email!');
-      } else {
-        alert('Failed to send email. Please try again.');
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      alert('Error sending email. Please try again.');
-    } finally {
-      setNewPatientLoading(false);
-    }
   };
 
   const startCamera = async (type: string) => {
@@ -141,6 +112,11 @@ export default function CheckInPage() {
   };
 
   const handleNewPatientSubmit = async () => {
+    if (!formData.email) {
+      alert('Please enter your email address');
+      return;
+    }
+
     setIsLoading(true);
     try {
       const formDataToSend = new FormData();
@@ -171,11 +147,21 @@ export default function CheckInPage() {
       });
 
       if (response.ok) {
-        // Send intake form email after successful check-in
-        await sendNewPatientIntakeEmail();
+        // Send intake form email using formData.email
+        try {
+          await fetch('/api/send-new-patient-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: formData.email })
+          });
+          console.log('Intake email sent successfully');
+        } catch (emailError) {
+          console.error('Email sending failed but check-in succeeded:', emailError);
+        }
         setSubmitted(true);
       } else {
-        alert('Failed to complete check-in. Please try again.');
+        const errorData = await response.json();
+        alert(`Failed to complete check-in: ${errorData.error || 'Please try again.'}`);
       }
     } catch (error) {
       console.error('Error submitting check-in:', error);
@@ -218,7 +204,8 @@ export default function CheckInPage() {
       if (response.ok) {
         setSubmitted(true);
       } else {
-        alert('Failed to complete check-in. Please try again.');
+        const errorData = await response.json();
+        alert(`Failed to complete check-in: ${errorData.error || 'Please try again.'}`);
       }
     } catch (error) {
       console.error('Error submitting check-in:', error);
@@ -238,7 +225,6 @@ export default function CheckInPage() {
     setIdBack(null);
     setAdditionalDocs([]);
     setSubmitted(false);
-    setNewPatientEmail('');
   };
 
   const allRequiredDocsScanned = insuranceCardFront && insuranceCardBack && idFront && idBack;
@@ -526,7 +512,7 @@ export default function CheckInPage() {
               <button onClick={() => setPatientType(null)} style={{ background: '#e5e7eb', color: '#374151', padding: '1rem 2rem', borderRadius: '0.75rem', fontSize: '1.125rem', fontWeight: '600', border: 'none', cursor: 'pointer' }}>
                 Back
               </button>
-              <button onClick={() => setStep(2)} disabled={!formData.firstName || !formData.lastName || !formData.email || !formData.phone || !formData.dateOfBirth} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: formData.firstName && formData.lastName && formData.email && formData.phone && formData.dateOfBirth ? 'linear-gradient(to right, #2563eb, #9333ea)' : '#d1d5db', color: 'white', padding: '1rem 2rem', borderRadius: '0.75rem', fontSize: '1.125rem', fontWeight: '600', border: 'none', cursor: 'pointer', marginLeft: 'auto' }}>
+              <button onClick={() => setStep(2)} disabled={!formData.firstName || !formData.lastName || !formData.email || !formData.phone || !formData.dateOfBirth} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: formData.firstName && formData.lastName && formData.email && formData.phone && formData.dateOfBirth ? 'linear-gradient(to right, #2563eb, #9333ea)' : '#d1d5db', color: 'white', padding: '1rem 2rem', borderRadius: '0.75rem', fontSize: '1.125rem', fontWeight: '600', border: 'none', cursor: formData.firstName && formData.lastName && formData.email && formData.phone && formData.dateOfBirth ? 'pointer' : 'not-allowed', marginLeft: 'auto' }}>
                 <span>Next</span>
                 <ArrowRight style={{ width: '1.25rem', height: '1.25rem' }} />
               </button>
