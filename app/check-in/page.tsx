@@ -147,7 +147,6 @@ export default function CheckInPage() {
       });
 
       if (response.ok) {
-        // Send intake form email using formData.email
         try {
           await fetch('/api/send-new-patient-email', {
             method: 'POST',
@@ -229,7 +228,6 @@ export default function CheckInPage() {
 
   const allRequiredDocsScanned = insuranceCardFront && insuranceCardBack && idFront && idBack;
 
-  // Welcome Screen
   if (patientType === null) {
     return (
       <div style={{
@@ -300,7 +298,6 @@ export default function CheckInPage() {
     );
   }
 
-  // Submitted State
   if (submitted) {
     return (
       <div style={{
@@ -357,7 +354,6 @@ export default function CheckInPage() {
     );
   }
 
-  // Camera View
   if (showCamera) {
     return (
       <div style={{ position: 'fixed', inset: 0, background: 'black', zIndex: 50, display: 'flex', flexDirection: 'column' }}>
@@ -404,16 +400,18 @@ export default function CheckInPage() {
     photo, 
     onCapture, 
     onRemove, 
-    label 
+    label,
+    required = true
   }: { 
     photo: PhotoData | null; 
     onCapture: () => void; 
     onRemove: () => void; 
     label: string;
+    required?: boolean;
   }) => (
     <div>
       <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#374151', marginBottom: '0.75rem' }}>
-        {label} <span style={{ color: '#ef4444' }}>*</span>
+        {label} {required && <span style={{ color: '#ef4444' }}>*</span>}
       </h3>
       {photo ? (
         <div style={{ position: 'relative' }}>
@@ -468,7 +466,6 @@ export default function CheckInPage() {
     </div>
   );
 
-  // New Patient - Step 1: Personal Info
   if (patientType === 'new' && step === 1) {
     return (
       <div style={{ minHeight: '100vh', background: 'linear-gradient(to bottom right, #dbeafe, #f3e8ff)', padding: '1rem' }}>
@@ -523,7 +520,6 @@ export default function CheckInPage() {
     );
   }
 
-  // New Patient - Step 2: Documents
   if (patientType === 'new' && step === 2) {
     return (
       <div style={{ minHeight: '100vh', background: 'linear-gradient(to bottom right, #dbeafe, #f3e8ff)', padding: '1rem' }}>
@@ -544,16 +540,16 @@ export default function CheckInPage() {
             <div style={{ marginBottom: '2.5rem' }}>
               <h3 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#1f2937', marginBottom: '1rem', borderBottom: '2px solid #e5e7eb', paddingBottom: '0.5rem' }}>Insurance Card</h3>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem' }}>
-                <DocumentCaptureBox photo={insuranceCardFront} onCapture={() => startCamera('insurance-front')} onRemove={() => setInsuranceCardFront(null)} label="Front Side" />
-                <DocumentCaptureBox photo={insuranceCardBack} onCapture={() => startCamera('insurance-back')} onRemove={() => setInsuranceCardBack(null)} label="Back Side" />
+                <DocumentCaptureBox photo={insuranceCardFront} onCapture={() => startCamera('insurance-front')} onRemove={() => setInsuranceCardFront(null)} label="Front Side" required={false} />
+                <DocumentCaptureBox photo={insuranceCardBack} onCapture={() => startCamera('insurance-back')} onRemove={() => setInsuranceCardBack(null)} label="Back Side" required={false} />
               </div>
             </div>
 
             <div style={{ marginBottom: '2.5rem' }}>
               <h3 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#1f2937', marginBottom: '1rem', borderBottom: '2px solid #e5e7eb', paddingBottom: '0.5rem' }}>Photo ID</h3>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem' }}>
-                <DocumentCaptureBox photo={idFront} onCapture={() => startCamera('id-front')} onRemove={() => setIdFront(null)} label="Front Side" />
-                <DocumentCaptureBox photo={idBack} onCapture={() => startCamera('id-back')} onRemove={() => setIdBack(null)} label="Back Side" />
+                <DocumentCaptureBox photo={idFront} onCapture={() => startCamera('id-front')} onRemove={() => setIdFront(null)} label="Front Side" required={true} />
+                <DocumentCaptureBox photo={idBack} onCapture={() => startCamera('id-back')} onRemove={() => setIdBack(null)} label="Back Side" required={true} />
               </div>
             </div>
 
@@ -588,7 +584,6 @@ export default function CheckInPage() {
     );
   }
 
-  // Returning Patient Check-In Form
   return (
     <div style={{ minHeight: '100vh', background: 'linear-gradient(to bottom right, #dbeafe, #f3e8ff)', padding: '1rem' }}>
       <div style={{ maxWidth: '64rem', margin: '0 auto' }}>
@@ -630,16 +625,16 @@ export default function CheckInPage() {
             <div style={{ marginBottom: '2.5rem' }}>
               <h3 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#1f2937', marginBottom: '1rem', borderBottom: '2px solid #e5e7eb', paddingBottom: '0.5rem' }}>Insurance Card</h3>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem' }}>
-                <DocumentCaptureBox photo={insuranceCardFront} onCapture={() => startCamera('insurance-front')} onRemove={() => setInsuranceCardFront(null)} label="Front Side" />
-                <DocumentCaptureBox photo={insuranceCardBack} onCapture={() => startCamera('insurance-back')} onRemove={() => setInsuranceCardBack(null)} label="Back Side" />
+                <DocumentCaptureBox photo={insuranceCardFront} onCapture={() => startCamera('insurance-front')} onRemove={() => setInsuranceCardFront(null)} label="Front Side" required={false} />
+                <DocumentCaptureBox photo={insuranceCardBack} onCapture={() => startCamera('insurance-back')} onRemove={() => setInsuranceCardBack(null)} label="Back Side" required={false} />
               </div>
             </div>
 
             <div style={{ marginBottom: '2.5rem' }}>
               <h3 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#1f2937', marginBottom: '1rem', borderBottom: '2px solid #e5e7eb', paddingBottom: '0.5rem' }}>Photo ID</h3>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem' }}>
-                <DocumentCaptureBox photo={idFront} onCapture={() => startCamera('id-front')} onRemove={() => setIdFront(null)} label="Front Side" />
-                <DocumentCaptureBox photo={idBack} onCapture={() => startCamera('id-back')} onRemove={() => setIdBack(null)} label="Back Side" />
+                <DocumentCaptureBox photo={idFront} onCapture={() => startCamera('id-front')} onRemove={() => setIdFront(null)} label="Front Side" required={true} />
+                <DocumentCaptureBox photo={idBack} onCapture={() => startCamera('id-back')} onRemove={() => setIdBack(null)} label="Back Side" required={true} />
               </div>
             </div>
 
