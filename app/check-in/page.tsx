@@ -226,7 +226,7 @@ export default function CheckInPage() {
     setSubmitted(false);
   };
 
-  const allRequiredDocsScanned =  idFront && idBack;
+  const allRequiredDocsScanned = idFront && idBack;
 
   if (patientType === null) {
     return (
@@ -357,7 +357,7 @@ export default function CheckInPage() {
   if (showCamera) {
     return (
       <div style={{ position: 'fixed', inset: 0, background: 'black', zIndex: 50, display: 'flex', flexDirection: 'column' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', background: '#111827' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', background: '#111827', flexShrink: 0 }}>
           <h2 style={{ color: 'white', fontSize: '1.25rem', fontWeight: '600' }}>
             {cameraType === 'insurance-front' && 'Scan Insurance Card - FRONT'}
             {cameraType === 'insurance-back' && 'Scan Insurance Card - BACK'}
@@ -365,28 +365,29 @@ export default function CheckInPage() {
             {cameraType === 'id-back' && 'Scan ID - BACK'}
             {cameraType === 'additional' && 'Scan Additional Document'}
           </h2>
-          <button onClick={stopCamera} style={{ color: 'white', background: 'transparent', border: 'none', cursor: 'pointer' }}>
+          <button onClick={stopCamera} style={{ color: 'white', background: 'transparent', border: 'none', cursor: 'pointer', flexShrink: 0 }}>
             <X style={{ width: '2rem', height: '2rem' }} />
           </button>
         </div>
         
-        <div style={{ flex: 1, position: 'relative' }}>
+        <div style={{ flex: 1, position: 'relative', minHeight: 0 }}>
           <video ref={videoRef} autoPlay playsInline style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           <canvas ref={canvasRef} style={{ display: 'none' }} />
         </div>
         
-        <div style={{ padding: '1.5rem', background: '#111827', textAlign: 'center' }}>
+        <div style={{ padding: '1.5rem', background: '#111827', textAlign: 'center', flexShrink: 0, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100px' }}>
           <button
             onClick={capturePhoto}
             style={{
               background: 'white',
               color: '#111827',
-              padding: '1rem 3rem',
+              padding: '0.75rem 2.5rem',
               borderRadius: '9999px',
-              fontSize: '1.25rem',
+              fontSize: '1.125rem',
               fontWeight: '600',
               border: 'none',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              whiteSpace: 'nowrap'
             }}
           >
             Capture Photo
