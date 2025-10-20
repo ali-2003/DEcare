@@ -23,8 +23,8 @@ const services: Service[] = [
   },
   {
     id: 3,
-    title: 'Metabolic Disorders',
-    description: 'Treatment for pituitary, parathyroid, and adrenal gland disorders.',
+    title: 'Hormonal Disorders',
+    description: 'Treatment for pituitary, parathyroid, PCOS, adrenal and hypogonadism disorders.',
     icon: 'bi-heart-pulse-fill',
     gradient: 'linear-gradient(135deg, #fce7f3, #fbcfe8)',
     iconGradient: 'linear-gradient(135deg, #ec4899, #db2777)',

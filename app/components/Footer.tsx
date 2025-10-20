@@ -27,10 +27,10 @@ export default function Footer() {
           <div className="col-lg-4">
             <h5 className="fw-bold mb-3">Office Hours</h5>
             <p className="text-white-50 mb-2">Monday: 8:30 AM - 5:00 PM</p>
-            <p className="text-white-50 mb-2">Thursday: 8:30 AM - 5:00 PM</p>
+            <p className="text-white-50 mb-2">Wednesday: 8:30 AM - 5:00 PM</p>
             <p className="text-white-50 mb-2">Friday: 8:30 AM - 5:00 PM</p>
             <p className="text-white-50 mb-2">Saturday: 9:00 AM - 12:00 PM</p>
-            <p className="text-white-50">Tue, Wed, Sun: Closed</p>
+            <p className="text-white-50">Tue, Thurs, Sun: Closed</p>
           </div>
         </div>
         <hr className="border-secondary my-4" />

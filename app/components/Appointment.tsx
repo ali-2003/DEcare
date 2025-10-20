@@ -95,7 +95,7 @@ export default function Appointment() {
                   </div>
                   <div className="col-6 col-md-4">
                     <div className="p-3 bg-light rounded">
-                      <strong>Thursday</strong>
+                      <strong>Wednesday</strong>
                       <p className="mb-0 text-muted small">8:30 AM - 5:00 PM</p>
                     </div>
                   </div>
@@ -112,7 +112,7 @@ export default function Appointment() {
                     </div>
                   </div>
                   <div className="col-12">
-                    <p className="text-muted mb-0"><em>Tuesday, Wednesday and Sunday: Closed</em></p>
+                    <p className="text-muted mb-0"><em>Tuesday, Thursday and Sunday: Closed</em></p>
                   </div>
                 </div>
               </div>
