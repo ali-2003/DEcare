@@ -1,7 +1,7 @@
 'use client'
 
-import React, { useState, useRef } from 'react';
-import { Camera, Upload, CheckCircle, ArrowRight, ArrowLeft, X } from 'lucide-react';
+import React, { useState } from 'react';
+import { Camera, CheckCircle, ArrowRight, ArrowLeft, X } from 'lucide-react';
 
 interface PhotoData {
   file: File;
@@ -9,18 +9,17 @@ interface PhotoData {
 }
 
 export default function CheckInPage() {
-  const [step, setStep] = useState(1);
+  const [patientType, setPatientType] = useState<'new' | 'returning' | null>(null);
+  const [step, setStep] = useState(1); // For new patients: 1=info, 2=documents
+  const [newPatientEmail, setNewPatientEmail] = useState('');
+  const [newPatientLoading, setNewPatientLoading] = useState(false);
+  
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
     email: '',
-    dateOfBirth: '',
-    address: '',
-    city: '',
-    state: '',
-    zipCode: '',
     phone: '',
-    insuranceCardId: '',
+    dateOfBirth: '',
   });
   
   const [insuranceCardFront, setInsuranceCardFront] = useState<PhotoData | null>(null);
@@ -31,14 +30,42 @@ export default function CheckInPage() {
   const [showCamera, setShowCamera] = useState(false);
   const [cameraType, setCameraType] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
+  const videoRef = React.useRef<HTMLVideoElement>(null);
+  const canvasRef = React.useRef<HTMLCanvasElement>(null);
+  const streamRef = React.useRef<MediaStream | null>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const sendNewPatientIntakeEmail = async () => {
+    if (!newPatientEmail) {
+      alert('Please enter your email address');
+      return;
+    }
+
+    setNewPatientLoading(true);
+    try {
+      const response = await fetch('/api/send-new-patient-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: newPatientEmail })
+      });
+
+      if (response.ok) {
+        alert('Intake form link sent to your email!');
+      } else {
+        alert('Failed to send email. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Error sending email. Please try again.');
+    } finally {
+      setNewPatientLoading(false);
+    }
   };
 
   const startCamera = async (type: string) => {
@@ -113,36 +140,77 @@ export default function CheckInPage() {
     setAdditionalDocs(prev => prev.filter(doc => doc.id !== id));
   };
 
-  const handleSubmit = async () => {
+  const handleNewPatientSubmit = async () => {
+    setIsLoading(true);
     try {
-      // Create FormData to send files
       const formDataToSend = new FormData();
       
-      // Add text fields
       formDataToSend.append('firstName', formData.firstName);
       formDataToSend.append('lastName', formData.lastName);
       formDataToSend.append('email', formData.email);
       formDataToSend.append('phone', formData.phone);
       formDataToSend.append('dateOfBirth', formData.dateOfBirth);
-      formDataToSend.append('address', formData.address);
-      formDataToSend.append('city', formData.city);
-      formDataToSend.append('state', formData.state);
-      formDataToSend.append('zipCode', formData.zipCode);
-      formDataToSend.append('insuranceCardId', formData.insuranceCardId);
+      formDataToSend.append('address', '');
+      formDataToSend.append('city', '');
+      formDataToSend.append('state', '');
+      formDataToSend.append('zipCode', '');
+      formDataToSend.append('insuranceCardId', '');
       
-      // Add files
       if (insuranceCardFront) formDataToSend.append('insuranceFront', insuranceCardFront.file);
       if (insuranceCardBack) formDataToSend.append('insuranceBack', insuranceCardBack.file);
       if (idFront) formDataToSend.append('idFront', idFront.file);
       if (idBack) formDataToSend.append('idBack', idBack.file);
       
-      // Add additional docs
       additionalDocs.forEach((doc, index) => {
         formDataToSend.append(`additionalDoc${index}`, doc.file);
       });
 
-      // Send to API
-      const response = await fetch('/api/checkin', {
+      const response = await fetch('/api/check-in', {
+        method: 'POST',
+        body: formDataToSend,
+      });
+
+      if (response.ok) {
+        // Send intake form email after successful check-in
+        await sendNewPatientIntakeEmail();
+        setSubmitted(true);
+      } else {
+        alert('Failed to complete check-in. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error submitting check-in:', error);
+      alert('Error submitting check-in. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleReturningPatientSubmit = async () => {
+    setIsLoading(true);
+    try {
+      const formDataToSend = new FormData();
+      
+      formDataToSend.append('firstName', formData.firstName);
+      formDataToSend.append('lastName', formData.lastName);
+      formDataToSend.append('email', formData.email);
+      formDataToSend.append('phone', formData.phone);
+      formDataToSend.append('dateOfBirth', '');
+      formDataToSend.append('address', '');
+      formDataToSend.append('city', '');
+      formDataToSend.append('state', '');
+      formDataToSend.append('zipCode', '');
+      formDataToSend.append('insuranceCardId', '');
+      
+      if (insuranceCardFront) formDataToSend.append('insuranceFront', insuranceCardFront.file);
+      if (insuranceCardBack) formDataToSend.append('insuranceBack', insuranceCardBack.file);
+      if (idFront) formDataToSend.append('idFront', idFront.file);
+      if (idBack) formDataToSend.append('idBack', idBack.file);
+      
+      additionalDocs.forEach((doc, index) => {
+        formDataToSend.append(`additionalDoc${index}`, doc.file);
+      });
+
+      const response = await fetch('/api/check-in', {
         method: 'POST',
         body: formDataToSend,
       });
@@ -155,33 +223,98 @@ export default function CheckInPage() {
     } catch (error) {
       console.error('Error submitting check-in:', error);
       alert('Error submitting check-in. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const resetForm = () => {
+    setPatientType(null);
     setStep(1);
-    setFormData({
-      firstName: '',
-      lastName: '',
-      email: '',
-      dateOfBirth: '',
-      address: '',
-      city: '',
-      state: '',
-      zipCode: '',
-      phone: '',
-      insuranceCardId: '',
-    });
+    setFormData({ firstName: '', lastName: '', email: '', phone: '', dateOfBirth: '' });
     setInsuranceCardFront(null);
     setInsuranceCardBack(null);
     setIdFront(null);
     setIdBack(null);
     setAdditionalDocs([]);
     setSubmitted(false);
+    setNewPatientEmail('');
   };
 
   const allRequiredDocsScanned = insuranceCardFront && insuranceCardBack && idFront && idBack;
 
+  // Welcome Screen
+  if (patientType === null) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: 'linear-gradient(to bottom right, #dbeafe, #f3e8ff)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '1rem'
+      }}>
+        <div style={{
+          background: 'white',
+          borderRadius: '1.5rem',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+          padding: '3rem',
+          maxWidth: '42rem',
+          width: '100%',
+          textAlign: 'center'
+        }}>
+          <h1 style={{ fontSize: '2.25rem', fontWeight: 'bold', color: '#1f2937', marginBottom: '1rem' }}>
+            Welcome
+          </h1>
+          <p style={{ fontSize: '1.125rem', color: '#4b5563', marginBottom: '3rem' }}>
+            Are you a new or returning patient?
+          </p>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+            <button
+              onClick={() => setPatientType('new')}
+              style={{
+                background: 'linear-gradient(to right, #2563eb, #9333ea)',
+                color: 'white',
+                padding: '2rem 1.5rem',
+                borderRadius: '0.75rem',
+                fontSize: '1.125rem',
+                fontWeight: '600',
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'transform 0.2s'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+              onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+            >
+              New Patient
+            </button>
+            
+            <button
+              onClick={() => setPatientType('returning')}
+              style={{
+                background: '#6b7280',
+                color: 'white',
+                padding: '2rem 1.5rem',
+                borderRadius: '0.75rem',
+                fontSize: '1.125rem',
+                fontWeight: '600',
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'transform 0.2s'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+              onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+            >
+              Returning Patient
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Submitted State
   if (submitted) {
     return (
       <div style={{
@@ -207,9 +340,14 @@ export default function CheckInPage() {
           <h1 style={{ fontSize: '2.25rem', fontWeight: 'bold', color: '#1f2937', marginBottom: '1rem' }}>
             Check-In Complete!
           </h1>
-          <p style={{ fontSize: '1.25rem', color: '#4b5563', marginBottom: '2rem' }}>
+          <p style={{ fontSize: '1.125rem', color: '#4b5563', marginBottom: '1rem' }}>
             Thank you for checking in. The doctor will be notified of your arrival.
           </p>
+          {patientType === 'new' && (
+            <p style={{ fontSize: '1rem', color: '#6b7280', marginBottom: '2rem', background: '#f0f9ff', padding: '1rem', borderRadius: '0.75rem', border: '1px solid #bfdbfe' }}>
+              We've also sent you an email with a link to complete your detailed patient intake form. Please complete it at your earliest convenience.
+            </p>
+          )}
           <p style={{ fontSize: '1.125rem', color: '#6b7280', marginBottom: '2rem' }}>
             Please have a seat in the waiting room. We'll call you shortly.
           </p>
@@ -220,19 +358,20 @@ export default function CheckInPage() {
               color: 'white',
               padding: '1rem 2rem',
               borderRadius: '0.75rem',
-              fontSize: '1.25rem',
+              fontSize: '1.125rem',
               fontWeight: '600',
               border: 'none',
               cursor: 'pointer'
             }}
           >
-            New Patient Check-In
+            New Check-In
           </button>
         </div>
       </div>
     );
   }
 
+  // Camera View
   if (showCamera) {
     return (
       <div style={{ position: 'fixed', inset: 0, background: 'black', zIndex: 50, display: 'flex', flexDirection: 'column' }}>
@@ -343,341 +482,205 @@ export default function CheckInPage() {
     </div>
   );
 
-  return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(to bottom right, #dbeafe, #f3e8ff)', padding: '1rem' }}>
-      <div style={{ maxWidth: '64rem', margin: '0 auto' }}>
-        {/* Header */}
-        <div style={{ background: 'white', borderRadius: '1.5rem', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)', padding: '2rem', marginBottom: '1.5rem' }}>
-          <div style={{ textAlign: 'center' }}>
-            <h1 style={{ fontSize: '2.25rem', fontWeight: 'bold', color: '#1f2937', marginBottom: '0.5rem' }}>
-              Diabetes & Endocrinology Care Clinic
-            </h1>
-            <p style={{ fontSize: '1.25rem', color: '#4b5563' }}>Patient Check-In</p>
+  // New Patient - Step 1: Personal Info
+  if (patientType === 'new' && step === 1) {
+    return (
+      <div style={{ minHeight: '100vh', background: 'linear-gradient(to bottom right, #dbeafe, #f3e8ff)', padding: '1rem' }}>
+        <div style={{ maxWidth: '64rem', margin: '0 auto' }}>
+          <div style={{ background: 'white', borderRadius: '1.5rem', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)', padding: '2rem', marginBottom: '1.5rem' }}>
+            <div style={{ textAlign: 'center' }}>
+              <h1 style={{ fontSize: '2.25rem', fontWeight: 'bold', color: '#1f2937', marginBottom: '0.5rem' }}>
+                New Patient Check-In
+              </h1>
+              <p style={{ fontSize: '1.25rem', color: '#4b5563' }}>Diabetes & Endocrinology Care Clinic</p>
+              <p style={{ fontSize: '1rem', color: '#6b7280', marginTop: '1rem' }}>Step 1 of 2: Personal Information</p>
+            </div>
           </div>
-          
-          {/* Progress Steps */}
-          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '2rem', gap: '1rem', alignItems: 'center' }}>
-            {[1, 2, 3].map((num) => (
-              <React.Fragment key={num}>
-                <div style={{
-                  width: '2.5rem',
-                  height: '2.5rem',
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontWeight: '600',
-                  background: step >= num ? 'linear-gradient(to right, #2563eb, #9333ea)' : '#e5e7eb',
-                  color: step >= num ? 'white' : '#9ca3af'
-                }}>
-                  {num}
-                </div>
-                {num < 3 && <div style={{ width: '4rem', height: '4px', background: step > num ? '#9333ea' : '#e5e7eb' }} />}
-              </React.Fragment>
-            ))}
-          </div>
-        </div>
 
-        {/* Form Content */}
-        <div style={{ background: 'white', borderRadius: '1.5rem', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)', padding: '2rem' }}>
-          {step === 1 && (
-            <div>
-              <h2 style={{ fontSize: '1.875rem', fontWeight: 'bold', color: '#1f2937', marginBottom: '1.5rem' }}>Personal Information</h2>
-              
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '1.125rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>First Name</label>
-                  <input
-                    type="text"
-                    name="firstName"
-                    value={formData.firstName}
-                    onChange={handleInputChange}
-                    style={{ width: '100%', padding: '0.75rem 1rem', fontSize: '1.125rem', border: '2px solid #d1d5db', borderRadius: '0.75rem', outline: 'none' }}
-                    placeholder="John"
-                  />
-                </div>
-                
-                <div>
-                  <label style={{ display: 'block', fontSize: '1.125rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>Last Name</label>
-                  <input
-                    type="text"
-                    name="lastName"
-                    value={formData.lastName}
-                    onChange={handleInputChange}
-                    style={{ width: '100%', padding: '0.75rem 1rem', fontSize: '1.125rem', border: '2px solid #d1d5db', borderRadius: '0.75rem', outline: 'none' }}
-                    placeholder="Doe"
-                  />
-                </div>
-                
-                <div>
-                  <label style={{ display: 'block', fontSize: '1.125rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>Date of Birth</label>
-                  <input
-                    type="date"
-                    name="dateOfBirth"
-                    value={formData.dateOfBirth}
-                    onChange={handleInputChange}
-                    style={{ width: '100%', padding: '0.75rem 1rem', fontSize: '1.125rem', border: '2px solid #d1d5db', borderRadius: '0.75rem', outline: 'none' }}
-                  />
-                </div>
-                
-                <div>
-                  <label style={{ display: 'block', fontSize: '1.125rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>Email Address</label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    style={{ width: '100%', padding: '0.75rem 1rem', fontSize: '1.125rem', border: '2px solid #d1d5db', borderRadius: '0.75rem', outline: 'none' }}
-                    placeholder="john.doe@example.com"
-                  />
-                </div>
-                
-                <div>
-                  <label style={{ display: 'block', fontSize: '1.125rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>Phone Number</label>
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    style={{ width: '100%', padding: '0.75rem 1rem', fontSize: '1.125rem', border: '2px solid #d1d5db', borderRadius: '0.75rem', outline: 'none' }}
-                    placeholder="(630) 234-4466"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {step === 2 && (
-            <div>
-              <h2 style={{ fontSize: '1.875rem', fontWeight: 'bold', color: '#1f2937', marginBottom: '1.5rem' }}>Address Information</h2>
-              
+          <div style={{ background: 'white', borderRadius: '1.5rem', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)', padding: '2rem' }}>
+            <h2 style={{ fontSize: '1.875rem', fontWeight: 'bold', color: '#1f2937', marginBottom: '1.5rem' }}>Personal Information</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
               <div>
-                <div style={{ marginBottom: '1.5rem' }}>
-                  <label style={{ display: 'block', fontSize: '1.125rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>Street Address</label>
-                  <input
-                    type="text"
-                    name="address"
-                    value={formData.address}
-                    onChange={handleInputChange}
-                    style={{ width: '100%', padding: '0.75rem 1rem', fontSize: '1.125rem', border: '2px solid #d1d5db', borderRadius: '0.75rem', outline: 'none' }}
-                    placeholder="123 Main Street"
-                  />
-                </div>
-                
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1.5rem', marginBottom: '1.5rem' }}>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '1.125rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>City</label>
-                    <input
-                      type="text"
-                      name="city"
-                      value={formData.city}
-                      onChange={handleInputChange}
-                      style={{ width: '100%', padding: '0.75rem 1rem', fontSize: '1.125rem', border: '2px solid #d1d5db', borderRadius: '0.75rem', outline: 'none' }}
-                      placeholder="Oak Brook"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label style={{ display: 'block', fontSize: '1.125rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>State</label>
-                    <input
-                      type="text"
-                      name="state"
-                      value={formData.state}
-                      onChange={handleInputChange}
-                      style={{ width: '100%', padding: '0.75rem 1rem', fontSize: '1.125rem', border: '2px solid #d1d5db', borderRadius: '0.75rem', outline: 'none' }}
-                      placeholder="IL"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label style={{ display: 'block', fontSize: '1.125rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>ZIP Code</label>
-                    <input
-                      type="text"
-                      name="zipCode"
-                      value={formData.zipCode}
-                      onChange={handleInputChange}
-                      style={{ width: '100%', padding: '0.75rem 1rem', fontSize: '1.125rem', border: '2px solid #d1d5db', borderRadius: '0.75rem', outline: 'none' }}
-                      placeholder="60523"
-                    />
-                  </div>
-                </div>
-                
-                <div>
-                  <label style={{ display: 'block', fontSize: '1.125rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>Insurance Card ID</label>
-                  <input
-                    type="text"
-                    name="insuranceCardId"
-                    value={formData.insuranceCardId}
-                    onChange={handleInputChange}
-                    style={{ width: '100%', padding: '0.75rem 1rem', fontSize: '1.125rem', border: '2px solid #d1d5db', borderRadius: '0.75rem', outline: 'none' }}
-                    placeholder="ABC123456789"
-                  />
-                </div>
+                <label style={{ display: 'block', fontSize: '1rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>First Name *</label>
+                <input type="text" name="firstName" value={formData.firstName} onChange={handleInputChange} required style={{ width: '100%', padding: '0.75rem 1rem', fontSize: '1rem', border: '2px solid #d1d5db', borderRadius: '0.75rem' }} placeholder="John" />
               </div>
-            </div>
-          )}
-
-          {step === 3 && (
-            <div>
-              <h2 style={{ fontSize: '1.875rem', fontWeight: 'bold', color: '#1f2937', marginBottom: '1.5rem' }}>Scan Documents</h2>
-              
-              {/* Insurance Card */}
-              <div style={{ marginBottom: '2.5rem' }}>
-                <h3 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#1f2937', marginBottom: '1rem', borderBottom: '2px solid #e5e7eb', paddingBottom: '0.5rem' }}>
-                  Insurance Card
-                </h3>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem' }}>
-                  <DocumentCaptureBox
-                    photo={insuranceCardFront}
-                    onCapture={() => startCamera('insurance-front')}
-                    onRemove={() => setInsuranceCardFront(null)}
-                    label="Front Side"
-                  />
-                  <DocumentCaptureBox
-                    photo={insuranceCardBack}
-                    onCapture={() => startCamera('insurance-back')}
-                    onRemove={() => setInsuranceCardBack(null)}
-                    label="Back Side"
-                  />
-                </div>
-              </div>
-
-              {/* ID Card */}
-              <div style={{ marginBottom: '2.5rem' }}>
-                <h3 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#1f2937', marginBottom: '1rem', borderBottom: '2px solid #e5e7eb', paddingBottom: '0.5rem' }}>
-                  Photo ID (Driver's License or State ID)
-                </h3>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem' }}>
-                  <DocumentCaptureBox
-                    photo={idFront}
-                    onCapture={() => startCamera('id-front')}
-                    onRemove={() => setIdFront(null)}
-                    label="Front Side"
-                  />
-                  <DocumentCaptureBox
-                    photo={idBack}
-                    onCapture={() => startCamera('id-back')}
-                    onRemove={() => setIdBack(null)}
-                    label="Back Side"
-                  />
-                </div>
-              </div>
-
-              {/* Additional Documents */}
               <div>
-                <h3 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#1f2937', marginBottom: '1rem', borderBottom: '2px solid #e5e7eb', paddingBottom: '0.5rem' }}>
-                  Additional Documents (Optional)
-                </h3>
-                
-                {additionalDocs.map((doc) => (
-                  <div key={doc.id} style={{ position: 'relative', marginBottom: '1rem' }}>
-                    <img src={doc.url} alt="Document" style={{ width: '100%', height: '12rem', objectFit: 'cover', borderRadius: '0.75rem', border: '2px solid #d1d5db' }} />
-                    <button
-                      onClick={() => removeAdditionalDoc(doc.id)}
-                      style={{
-                        position: 'absolute',
-                        top: '0.5rem',
-                        right: '0.5rem',
-                        background: '#ef4444',
-                        color: 'white',
-                        padding: '0.5rem',
-                        borderRadius: '50%',
-                        border: 'none',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      <X style={{ width: '1.25rem', height: '1.25rem' }} />
-                    </button>
-                  </div>
-                ))}
-                
-                <div
-                  onClick={() => startCamera('additional')}
-                  style={{
-                    width: '100%',
-                    border: '4px dashed #d1d5db',
-                    borderRadius: '0.75rem',
-                    padding: '2rem',
-                    textAlign: 'center',
-                    cursor: 'pointer',
-                    background: 'white'
-                  }}
-                >
-                  <Upload style={{ width: '3rem', height: '3rem', color: '#9ca3af', margin: '0 auto 0.5rem' }} />
-                  <p style={{ fontSize: '1.125rem', fontWeight: '600', color: '#4b5563' }}>Scan Additional Document</p>
-                </div>
+                <label style={{ display: 'block', fontSize: '1rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>Last Name *</label>
+                <input type="text" name="lastName" value={formData.lastName} onChange={handleInputChange} required style={{ width: '100%', padding: '0.75rem 1rem', fontSize: '1rem', border: '2px solid #d1d5db', borderRadius: '0.75rem' }} placeholder="Doe" />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '1rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>Date of Birth *</label>
+                <input type="date" name="dateOfBirth" value={formData.dateOfBirth} onChange={handleInputChange} required style={{ width: '100%', padding: '0.75rem 1rem', fontSize: '1rem', border: '2px solid #d1d5db', borderRadius: '0.75rem' }} />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '1rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>Email *</label>
+                <input type="email" name="email" value={formData.email} onChange={handleInputChange} required style={{ width: '100%', padding: '0.75rem 1rem', fontSize: '1rem', border: '2px solid #d1d5db', borderRadius: '0.75rem' }} placeholder="john@example.com" />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '1rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>Phone Number *</label>
+                <input type="tel" name="phone" value={formData.phone} onChange={handleInputChange} required style={{ width: '100%', padding: '0.75rem 1rem', fontSize: '1rem', border: '2px solid #d1d5db', borderRadius: '0.75rem' }} placeholder="(630) 234-4466" />
               </div>
             </div>
-          )}
 
-          {/* Navigation Buttons */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2rem' }}>
-            {step > 1 && (
-              <button
-                onClick={() => setStep(step - 1)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  background: '#e5e7eb',
-                  color: '#374151',
-                  padding: '1rem 2rem',
-                  borderRadius: '0.75rem',
-                  fontSize: '1.125rem',
-                  fontWeight: '600',
-                  border: 'none',
-                  cursor: 'pointer'
-                }}
-              >
-                <ArrowLeft style={{ width: '1.25rem', height: '1.25rem' }} />
-                <span>Back</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2rem', gap: '1rem' }}>
+              <button onClick={() => setPatientType(null)} style={{ background: '#e5e7eb', color: '#374151', padding: '1rem 2rem', borderRadius: '0.75rem', fontSize: '1.125rem', fontWeight: '600', border: 'none', cursor: 'pointer' }}>
+                Back
               </button>
-            )}
-            
-            {step < 3 ? (
-              <button
-                onClick={() => setStep(step + 1)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  background: 'linear-gradient(to right, #2563eb, #9333ea)',
-                  color: 'white',
-                  padding: '1rem 2rem',
-                  borderRadius: '0.75rem',
-                  fontSize: '1.125rem',
-                  fontWeight: '600',
-                  border: 'none',
-                  cursor: 'pointer',
-                  marginLeft: 'auto'
-                }}
-              >
+              <button onClick={() => setStep(2)} disabled={!formData.firstName || !formData.lastName || !formData.email || !formData.phone || !formData.dateOfBirth} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: formData.firstName && formData.lastName && formData.email && formData.phone && formData.dateOfBirth ? 'linear-gradient(to right, #2563eb, #9333ea)' : '#d1d5db', color: 'white', padding: '1rem 2rem', borderRadius: '0.75rem', fontSize: '1.125rem', fontWeight: '600', border: 'none', cursor: 'pointer', marginLeft: 'auto' }}>
                 <span>Next</span>
                 <ArrowRight style={{ width: '1.25rem', height: '1.25rem' }} />
               </button>
-            ) : (
-              <button
-                onClick={handleSubmit}
-                disabled={!allRequiredDocsScanned}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  background: allRequiredDocsScanned ? 'linear-gradient(to right, #059669, #2563eb)' : '#d1d5db',
-                  color: allRequiredDocsScanned ? 'white' : '#6b7280',
-                  padding: '1rem 2rem',
-                  borderRadius: '0.75rem',
-                  fontSize: '1.125rem',
-                  fontWeight: '600',
-                  border: 'none',
-                  cursor: allRequiredDocsScanned ? 'pointer' : 'not-allowed',
-                  marginLeft: 'auto'
-                }}
-              >
-                <span>Complete Check-In</span>
-                <CheckCircle style={{ width: '1.25rem', height: '1.25rem' }} />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // New Patient - Step 2: Documents
+  if (patientType === 'new' && step === 2) {
+    return (
+      <div style={{ minHeight: '100vh', background: 'linear-gradient(to bottom right, #dbeafe, #f3e8ff)', padding: '1rem' }}>
+        <div style={{ maxWidth: '64rem', margin: '0 auto' }}>
+          <div style={{ background: 'white', borderRadius: '1.5rem', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)', padding: '2rem', marginBottom: '1.5rem' }}>
+            <div style={{ textAlign: 'center' }}>
+              <h1 style={{ fontSize: '2.25rem', fontWeight: 'bold', color: '#1f2937', marginBottom: '0.5rem' }}>
+                New Patient Check-In
+              </h1>
+              <p style={{ fontSize: '1.25rem', color: '#4b5563' }}>Diabetes & Endocrinology Care Clinic</p>
+              <p style={{ fontSize: '1rem', color: '#6b7280', marginTop: '1rem' }}>Step 2 of 2: Scan Documents</p>
+            </div>
+          </div>
+
+          <div style={{ background: 'white', borderRadius: '1.5rem', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)', padding: '2rem' }}>
+            <h2 style={{ fontSize: '1.875rem', fontWeight: 'bold', color: '#1f2937', marginBottom: '1.5rem' }}>Scan Documents</h2>
+            
+            <div style={{ marginBottom: '2.5rem' }}>
+              <h3 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#1f2937', marginBottom: '1rem', borderBottom: '2px solid #e5e7eb', paddingBottom: '0.5rem' }}>Insurance Card</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem' }}>
+                <DocumentCaptureBox photo={insuranceCardFront} onCapture={() => startCamera('insurance-front')} onRemove={() => setInsuranceCardFront(null)} label="Front Side" />
+                <DocumentCaptureBox photo={insuranceCardBack} onCapture={() => startCamera('insurance-back')} onRemove={() => setInsuranceCardBack(null)} label="Back Side" />
+              </div>
+            </div>
+
+            <div style={{ marginBottom: '2.5rem' }}>
+              <h3 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#1f2937', marginBottom: '1rem', borderBottom: '2px solid #e5e7eb', paddingBottom: '0.5rem' }}>Photo ID</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem' }}>
+                <DocumentCaptureBox photo={idFront} onCapture={() => startCamera('id-front')} onRemove={() => setIdFront(null)} label="Front Side" />
+                <DocumentCaptureBox photo={idBack} onCapture={() => startCamera('id-back')} onRemove={() => setIdBack(null)} label="Back Side" />
+              </div>
+            </div>
+
+            <div>
+              <h3 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#1f2937', marginBottom: '1rem', borderBottom: '2px solid #e5e7eb', paddingBottom: '0.5rem' }}>Additional Documents (Optional)</h3>
+              {additionalDocs.map((doc) => (
+                <div key={doc.id} style={{ position: 'relative', marginBottom: '1rem' }}>
+                  <img src={doc.url} alt="Document" style={{ width: '100%', height: '12rem', objectFit: 'cover', borderRadius: '0.75rem', border: '2px solid #d1d5db' }} />
+                  <button onClick={() => removeAdditionalDoc(doc.id)} style={{ position: 'absolute', top: '0.5rem', right: '0.5rem', background: '#ef4444', color: 'white', padding: '0.5rem', borderRadius: '50%', border: 'none', cursor: 'pointer' }}>
+                    <X style={{ width: '1.25rem', height: '1.25rem' }} />
+                  </button>
+                </div>
+              ))}
+              <div onClick={() => startCamera('additional')} style={{ width: '100%', border: '4px dashed #d1d5db', borderRadius: '0.75rem', padding: '2rem', textAlign: 'center', cursor: 'pointer', background: 'white' }}>
+                <Camera style={{ width: '3rem', height: '3rem', color: '#9ca3af', margin: '0 auto 0.5rem' }} />
+                <p style={{ fontSize: '1.125rem', fontWeight: '600', color: '#4b5563' }}>Scan Additional Document</p>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2rem', gap: '1rem' }}>
+              <button onClick={() => setStep(1)} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#e5e7eb', color: '#374151', padding: '1rem 2rem', borderRadius: '0.75rem', fontSize: '1.125rem', fontWeight: '600', border: 'none', cursor: 'pointer' }}>
+                <ArrowLeft style={{ width: '1.25rem', height: '1.25rem' }} />
+                <span>Back</span>
               </button>
-            )}
+              <button onClick={handleNewPatientSubmit} disabled={!allRequiredDocsScanned || isLoading} style={{ background: allRequiredDocsScanned ? 'linear-gradient(to right, #059669, #2563eb)' : '#d1d5db', color: allRequiredDocsScanned ? 'white' : '#6b7280', padding: '1rem 2rem', borderRadius: '0.75rem', fontSize: '1.125rem', fontWeight: '600', border: 'none', cursor: allRequiredDocsScanned ? 'pointer' : 'not-allowed', marginLeft: 'auto' }}>
+                {isLoading ? 'Submitting...' : 'Complete Check-In'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Returning Patient Check-In Form
+  return (
+    <div style={{ minHeight: '100vh', background: 'linear-gradient(to bottom right, #dbeafe, #f3e8ff)', padding: '1rem' }}>
+      <div style={{ maxWidth: '64rem', margin: '0 auto' }}>
+        <div style={{ background: 'white', borderRadius: '1.5rem', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)', padding: '2rem', marginBottom: '1.5rem' }}>
+          <div style={{ textAlign: 'center' }}>
+            <h1 style={{ fontSize: '2.25rem', fontWeight: 'bold', color: '#1f2937', marginBottom: '0.5rem' }}>
+              Returning Patient Check-In
+            </h1>
+            <p style={{ fontSize: '1.25rem', color: '#4b5563' }}>Diabetes & Endocrinology Care Clinic</p>
+          </div>
+        </div>
+
+        <div style={{ background: 'white', borderRadius: '1.5rem', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)', padding: '2rem' }}>
+          <div style={{ marginBottom: '2rem' }}>
+            <h2 style={{ fontSize: '1.875rem', fontWeight: 'bold', color: '#1f2937', marginBottom: '1.5rem' }}>Patient Information</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '1rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>First Name</label>
+                <input type="text" name="firstName" value={formData.firstName} onChange={handleInputChange} style={{ width: '100%', padding: '0.75rem 1rem', fontSize: '1rem', border: '2px solid #d1d5db', borderRadius: '0.75rem' }} placeholder="John" />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '1rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>Last Name</label>
+                <input type="text" name="lastName" value={formData.lastName} onChange={handleInputChange} style={{ width: '100%', padding: '0.75rem 1rem', fontSize: '1rem', border: '2px solid #d1d5db', borderRadius: '0.75rem' }} placeholder="Doe" />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '1rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>Email</label>
+                <input type="email" name="email" value={formData.email} onChange={handleInputChange} style={{ width: '100%', padding: '0.75rem 1rem', fontSize: '1rem', border: '2px solid #d1d5db', borderRadius: '0.75rem' }} placeholder="john@example.com" />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '1rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>Phone</label>
+                <input type="tel" name="phone" value={formData.phone} onChange={handleInputChange} style={{ width: '100%', padding: '0.75rem 1rem', fontSize: '1rem', border: '2px solid #d1d5db', borderRadius: '0.75rem' }} placeholder="(630) 234-4466" />
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h2 style={{ fontSize: '1.875rem', fontWeight: 'bold', color: '#1f2937', marginBottom: '1.5rem' }}>Scan Documents</h2>
+            
+            <div style={{ marginBottom: '2.5rem' }}>
+              <h3 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#1f2937', marginBottom: '1rem', borderBottom: '2px solid #e5e7eb', paddingBottom: '0.5rem' }}>Insurance Card</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem' }}>
+                <DocumentCaptureBox photo={insuranceCardFront} onCapture={() => startCamera('insurance-front')} onRemove={() => setInsuranceCardFront(null)} label="Front Side" />
+                <DocumentCaptureBox photo={insuranceCardBack} onCapture={() => startCamera('insurance-back')} onRemove={() => setInsuranceCardBack(null)} label="Back Side" />
+              </div>
+            </div>
+
+            <div style={{ marginBottom: '2.5rem' }}>
+              <h3 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#1f2937', marginBottom: '1rem', borderBottom: '2px solid #e5e7eb', paddingBottom: '0.5rem' }}>Photo ID</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem' }}>
+                <DocumentCaptureBox photo={idFront} onCapture={() => startCamera('id-front')} onRemove={() => setIdFront(null)} label="Front Side" />
+                <DocumentCaptureBox photo={idBack} onCapture={() => startCamera('id-back')} onRemove={() => setIdBack(null)} label="Back Side" />
+              </div>
+            </div>
+
+            <div>
+              <h3 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#1f2937', marginBottom: '1rem', borderBottom: '2px solid #e5e7eb', paddingBottom: '0.5rem' }}>Additional Documents (Optional)</h3>
+              {additionalDocs.map((doc) => (
+                <div key={doc.id} style={{ position: 'relative', marginBottom: '1rem' }}>
+                  <img src={doc.url} alt="Document" style={{ width: '100%', height: '12rem', objectFit: 'cover', borderRadius: '0.75rem', border: '2px solid #d1d5db' }} />
+                  <button onClick={() => removeAdditionalDoc(doc.id)} style={{ position: 'absolute', top: '0.5rem', right: '0.5rem', background: '#ef4444', color: 'white', padding: '0.5rem', borderRadius: '50%', border: 'none', cursor: 'pointer' }}>
+                    <X style={{ width: '1.25rem', height: '1.25rem' }} />
+                  </button>
+                </div>
+              ))}
+              <div onClick={() => startCamera('additional')} style={{ width: '100%', border: '4px dashed #d1d5db', borderRadius: '0.75rem', padding: '2rem', textAlign: 'center', cursor: 'pointer', background: 'white' }}>
+                <Camera style={{ width: '3rem', height: '3rem', color: '#9ca3af', margin: '0 auto 0.5rem' }} />
+                <p style={{ fontSize: '1.125rem', fontWeight: '600', color: '#4b5563' }}>Scan Additional Document</p>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2rem', gap: '1rem' }}>
+            <button onClick={() => setPatientType(null)} style={{ background: '#e5e7eb', color: '#374151', padding: '1rem 2rem', borderRadius: '0.75rem', fontSize: '1.125rem', fontWeight: '600', border: 'none', cursor: 'pointer' }}>
+              Back
+            </button>
+            <button onClick={handleReturningPatientSubmit} disabled={!allRequiredDocsScanned || isLoading} style={{ background: allRequiredDocsScanned ? 'linear-gradient(to right, #059669, #2563eb)' : '#d1d5db', color: allRequiredDocsScanned ? 'white' : '#6b7280', padding: '1rem 2rem', borderRadius: '0.75rem', fontSize: '1.125rem', fontWeight: '600', border: 'none', cursor: allRequiredDocsScanned ? 'pointer' : 'not-allowed', marginLeft: 'auto' }}>
+              {isLoading ? 'Submitting...' : 'Complete Check-In'}
+            </button>
           </div>
         </div>
       </div>
